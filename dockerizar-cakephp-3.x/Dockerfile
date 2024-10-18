@@ -1,7 +1,7 @@
 FROM php:8.1-apache
 
-ENV SERVER_NAME tadaruleta.com.py
-ENV SERVER_ADMIN soporte@nosotroshq.com
+ENV SERVER_NAME misitio.com
+ENV SERVER_ADMIN admin@misitio.com
 
 #Habilitamos la configuración de php que ya esta dentro de la imagen
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
