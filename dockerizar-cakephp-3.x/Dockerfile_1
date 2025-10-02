@@ -1,0 +1,52 @@
+FROM php:5.6-apache 
+
+
+# Variables de entorno
+ENV SERVER_NAME cmcp.com.py
+ENV SERVER_ADMIN soporte@cmcp.com.py
+# ARG DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /var/www/html
+
+
+# Habilitamos la configuración de php y establecemos la zona horaria
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
+    sed -i "s/;date.timezone =/date.timezone = America\/Asuncion/g" "$PHP_INI_DIR/php.ini"
+
+#Instalamos dependencias para las extensiones que necesitamos
+# Fix for Debian Stretch (EOL) repositories
+RUN sed -i 's|http://deb.debian.org|http://archive.debian.org|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.debian.org|http://archive.debian.org|g' /etc/apt/sources.list && \
+    sed -i '/stretch-updates/d' /etc/apt/sources.list && \
+    apt-get update --allow-unauthenticated && \
+    apt-get install -y --allow-unauthenticated \
+    ruby-sass \
+    libicu-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libwebp-dev \
+    libzip-dev
+
+#instalamos las extensiones adicionales de php
+# RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
+RUN docker-php-ext-install intl mbstring simplexml pdo pdo_mysql gd zip
+
+#Configuración del apache
+# Configuración optimizada de Apache
+RUN sed -ri \
+    -e 's!#ServerName www.example.com!ServerName ${SERVER_NAME}!g' \
+    -e 's!ServerAdmin webmaster@localhost!ServerAdmin ${SERVER_ADMIN}!g' \
+    -e '/<\/VirtualHost>/i\\t<Directory \/var\/www\/html\/>\n\t\tAllowOverride All\n\t<\/Directory>' \
+    /etc/apache2/sites-available/*.conf
+
+# Setear configuración de Apache: copiar y habilitar security-headers
+COPY ./server/security-headers.conf /etc/apache2/conf-available/security-headers.conf
+RUN a2enconf security-headers
+RUN a2enmod rewrite headers
+
+#Ajustamos los permisos al final de todo.
+COPY --chown=www-data:www-data ./web /var/www/html
+
+

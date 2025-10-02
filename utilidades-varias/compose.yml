@@ -1,0 +1,41 @@
+services:
+  web:
+    image: ${DOCKER_IMAGE_NAME}
+    container_name: ${PROJECT_NAME}-web
+    build: ./
+    restart: always
+    ports:
+      - ${WEB_PORT:-2037}:80
+    env_file:
+      - .env
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /var/www/html/
+          ignore:
+            - vendor/
+    depends_on:
+      database:
+        condition: service_healthy
+  database:
+    image: mariadb:11.1.2
+    container_name: ${PROJECT_NAME}-datos
+    restart: always
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_PASS}
+      - MARIADB_DATABASE=${DB_NAME}
+    ports:
+      - ${DB_PORT:-2038}:3306
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh", "--connect"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+volumes:
+  database:
+networks:
+  default:
+    name: ${PROJECT_NAME}-net
