@@ -2,12 +2,11 @@ FROM php:5.6-apache
 
 
 # Variables de entorno
-ENV SERVER_NAME cmcp.com.py
-ENV SERVER_ADMIN soporte@cmcp.com.py
+ENV SERVER_NAME github.com
+ENV SERVER_ADMIN soporte@github.com
 # ARG DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /var/www/html
-
 
 # Habilitamos la configuración de php y establecemos la zona horaria
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
