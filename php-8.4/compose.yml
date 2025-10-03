@@ -1,0 +1,20 @@
+services:
+  web:
+    build: .
+    image: ${DOCKER_IMAGE_NAME:-web}
+    container_name: ${CONTAINER_NAME:-web}
+    ports:
+      - ${WEB_PORT:-8080}:80
+    env_file:
+      - .env
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /var/www/html/
+          ignore:
+            - vendor/
+networks:
+  default_network:
+    name: ${DOCKER_IMAGE_NAME:-default_network}
+    driver: bridge
