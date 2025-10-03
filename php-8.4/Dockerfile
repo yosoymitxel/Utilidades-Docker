@@ -3,7 +3,7 @@
 # Etapa 1: Composer
 FROM composer:2 AS vendor
 WORKDIR /app_composer
-COPY web/composer.json web/composer.lock* ./
+COPY composer.json composer.lock* ./
 RUN composer install --no-dev --optimize-autoloader
 
 # Etapa 2: PHP + Apache
