@@ -1,0 +1,32 @@
+stages:
+  - build-test
+
+build:
+  stage: build-test
+  image: docker:latest
+  #services:
+  #  - name: docker:dind
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+    # Valor por defecto si no se pasa ENV_FILE en CI variables
+    ENV_FILE: .env
+  before_script: |
+    set -euo pipefail # Detectar errores
+    echo "==> Validando entorno del pipeline"
+    if [ -z "${ENV_FILE:-}" ]; then echo "ERROR: valores de ENV_FILE no definido"; exit 1; fi
+    if [ ! -f "$ENV_FILE" ]; then echo "ERROR: archivo $ENV_FILE no existe"; exit 1; fi
+    cat "$ENV_FILE" > .env
+    cat "$ENV_FILE" > web/.env
+    echo "==> Docker info"
+    docker info
+    echo "==> Intentando login en registry"
+    docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" || { echo "ERROR: docker login falló"; exit 1; }
+  script:
+    - echo "==> Generando imagen docker ${DOCKER_IMAGE_NAME}..."
+    - docker compose build --pull --no-cache
+    - echo "==> Levantando contenedores..."
+    - 'docker compose up -d || { echo "==> ERROR: Falló el inicio de contenedores. Mostrando logs..."; docker compose logs; docker compose ps -a; exit 1; }'
+    - echo "==> Estado de contenedores"
+    - docker compose ps
+  only:
+    - main
